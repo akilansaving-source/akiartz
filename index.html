@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AkiArtz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #faf8f4; --warm-white: #fffefb; --stone: #e8e4dc;
+    --muted: #b5afa4; --text: #2a2520; --text-soft: #7a746c;
+    --accent: #c8a96e; --accent-dark: #9e7d43; --border: rgba(42,37,32,0.1);
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Jost', sans-serif; background: var(--cream); color: var(--text); font-weight: 300; letter-spacing: 0.01em; overflow-x: hidden; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 4rem;
+    background: rgba(250,248,244,0.92); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 400;
+    letter-spacing: 0.1em; color: var(--text); text-decoration: none;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; align-items: center; }
+  .nav-links a {
+    font-size: 0.75rem; font-weight: 400; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-soft); text-decoration: none; transition: color 0.25s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-admin-btn {
+    font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+    background: none; border: 1px solid var(--border); color: var(--text-soft);
+    padding: 0.45rem 1rem; cursor: pointer; transition: all 0.2s; border-radius: 1px;
+  }
+  .nav-admin-btn:hover { border-color: var(--text); color: var(--text); }
+  .nav-admin-btn.logged-in { background: var(--text); color: var(--warm-white); border-color: var(--text); }
+
+  /* ── LOGIN MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(30,26,22,0.7); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--warm-white); width: 100%; max-width: 400px;
+    padding: 3rem 2.5rem; position: relative;
+    transform: translateY(16px); transition: transform 0.3s;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1.25rem;
+    background: none; border: none; font-size: 1.5rem; color: var(--muted);
+    cursor: pointer; line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-eyebrow {
+    font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.5rem;
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300;
+    margin-bottom: 2rem; line-height: 1.1;
+  }
+  .modal-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1.25rem; }
+  .modal-field label {
+    font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-soft);
+  }
+  .modal-field input {
+    font-family: 'Jost', sans-serif; font-size: 0.88rem; font-weight: 300;
+    background: var(--cream); border: 1px solid var(--stone);
+    padding: 0.6rem 0.85rem; outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  .modal-field input:focus { border-color: var(--accent); }
+  .modal-error {
+    font-size: 0.75rem; color: #b94040; margin-bottom: 1rem;
+    display: none; letter-spacing: 0.04em;
+  }
+  .modal-error.visible { display: block; }
+  .modal-submit {
+    width: 100%; font-family: 'Jost', sans-serif;
+    font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase;
+    background: var(--text); color: var(--warm-white);
+    border: none; padding: 0.9rem; cursor: pointer; transition: background 0.25s;
+  }
+  .modal-submit:hover { background: var(--accent-dark); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 8rem 2rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero-eyebrow { font-size: 0.7rem; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; }
+  .hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(3.5rem, 8vw, 7rem); font-weight: 300; line-height: 1.05; letter-spacing: -0.01em; color: var(--text); margin-bottom: 1.5rem; }
+  .hero-title em { font-style: italic; color: var(--accent-dark); }
+  .hero-sub { font-size: 0.9rem; font-weight: 300; letter-spacing: 0.06em; color: var(--text-soft); max-width: 420px; line-height: 1.8; margin-bottom: 3rem; }
+  .hero-scroll { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+  .hero-scroll-line { width: 1px; height: 40px; background: var(--muted); animation: scrollLine 2s ease-in-out infinite; }
+  @keyframes scrollLine { 0%,100%{opacity:0.4;transform:scaleY(1);}50%{opacity:1;transform:scaleY(0.5);} }
+  .hero-bg-text { position: absolute; font-family: 'Cormorant Garamond', serif; font-size: 22vw; font-weight: 300; color: rgba(42,37,32,0.03); user-select: none; pointer-events: none; white-space: nowrap; top: 50%; transform: translateY(-50%); letter-spacing: -0.02em; }
+
+  /* ── ABOUT ── */
+  .section-label { font-size: 0.65rem; font-weight: 400; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
+  .about { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; max-width: 1100px; margin: 0 auto; padding: 8rem 4rem; }
+  .about-img { aspect-ratio: 4/5; background: var(--stone); position: relative; overflow: hidden; }
+  .about-img::after { content: ''; position: absolute; inset: 0; border: 1px solid rgba(200,169,110,0.2); pointer-events: none; }
+  .about-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .about-img-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  .about-img-placeholder svg { width: 40px; height: 40px; opacity: 0.4; stroke: var(--muted); fill: none; stroke-width: 1; }
+  .about-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 300; line-height: 1.2; margin-bottom: 1.5rem; }
+  .about-body { font-size: 0.9rem; line-height: 2; color: var(--text-soft); margin-bottom: 2rem; }
+  .about-link { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--text); padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; }
+  .about-link:hover { color: var(--accent-dark); border-color: var(--accent-dark); }
+
+  /* ── GALLERY ── */
+  #gallery { background: var(--warm-white); padding: 8rem 4rem; }
+  .gallery-header { display: flex; align-items: flex-end; justify-content: space-between; max-width: 1200px; margin: 0 auto 4rem; }
+  .gallery-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.2rem, 4vw, 3.5rem); font-weight: 300; line-height: 1.1; }
+  .gallery-filter { display: flex; gap: 1rem; }
+  .filter-btn { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; background: none; border: 1px solid var(--border); color: var(--text-soft); padding: 0.45rem 1rem; cursor: pointer; transition: all 0.2s; border-radius: 1px; }
+  .filter-btn.active, .filter-btn:hover { background: var(--text); color: var(--warm-white); border-color: var(--text); }
+  .gallery-grid { max-width: 1200px; margin: 0 auto; columns: 3; column-gap: 1.5rem; }
+  .gallery-item { break-inside: avoid; margin-bottom: 1.5rem; position: relative; overflow: hidden; cursor: pointer; animation: fadeUp 0.6s ease forwards; opacity: 0; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+  .gallery-item:nth-child(1){animation-delay:.05s}.gallery-item:nth-child(2){animation-delay:.12s}.gallery-item:nth-child(3){animation-delay:.19s}.gallery-item:nth-child(4){animation-delay:.26s}.gallery-item:nth-child(5){animation-delay:.33s}.gallery-item:nth-child(6){animation-delay:.40s}
+  .gallery-item img { display: block; width: 100%; transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+  .gallery-item:hover img { transform: scale(1.04); }
+  .gallery-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(42,37,32,0.65) 0%, transparent 55%); opacity: 0; transition: opacity 0.4s; display: flex; align-items: flex-end; padding: 1.25rem; }
+  .gallery-item:hover .gallery-overlay { opacity: 1; }
+  .gallery-caption { color: #fffefb; width: 100%; }
+  .gallery-caption-title { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 300; display: block; margin-bottom: 0.15rem; }
+  .gallery-caption-meta { font-size: 0.68rem; letter-spacing: 0.1em; opacity: 0.75; display: block; margin-bottom: 0.5rem; }
+  .gallery-caption-price { font-size: 0.8rem; font-weight: 400; color: var(--accent); letter-spacing: 0.06em; display: block; }
+  .gallery-placeholder { background: var(--stone); width: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; }
+
+  /* ── UPLOAD SECTION ── */
+  #upload { padding: 8rem 4rem; background: var(--cream); display: none; }
+  #upload.admin-visible { display: block; }
+  .upload-inner { max-width: 760px; margin: 0 auto; text-align: center; }
+  .upload-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 3.5vw, 2.8rem); font-weight: 300; margin-bottom: 1rem; }
+  .upload-desc { font-size: 0.88rem; color: var(--text-soft); line-height: 1.9; margin-bottom: 3rem; }
+  .upload-zone { border: 1.5px dashed var(--stone); padding: 3.5rem 2rem; text-align: center; cursor: pointer; transition: border-color 0.25s, background 0.25s; position: relative; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(200,169,110,0.04); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { width: 48px; height: 48px; margin: 0 auto 1.25rem; stroke: var(--muted); fill: none; stroke-width: 1; display: block; }
+  .upload-cta { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); margin-bottom: 0.5rem; }
+  .upload-hint { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; }
+
+  .artwork-queue { margin-top: 3rem; display: flex; flex-direction: column; gap: 2rem; text-align: left; }
+  .artwork-card { background: var(--warm-white); border: 1px solid var(--border); display: grid; grid-template-columns: 160px 1fr; gap: 0; overflow: hidden; animation: fadeUp 0.4s ease forwards; }
+  .artwork-card-img { width: 160px; aspect-ratio: 4/5; object-fit: cover; display: block; flex-shrink: 0; }
+  .artwork-card-form { padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
+  .artwork-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem; }
+  .artwork-card-filename { font-size: 0.72rem; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+  .artwork-card-remove { background: none; border: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; line-height: 1; transition: color 0.2s; padding: 0; }
+  .artwork-card-remove:hover { color: #b94040; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+  .field label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-soft); font-weight: 400; }
+  .field input, .field select, .field textarea {
+    font-family: 'Jost', sans-serif; font-size: 0.85rem; font-weight: 300; color: var(--text);
+    background: var(--cream); border: 1px solid var(--stone); padding: 0.55rem 0.75rem;
+    border-radius: 0; outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 72px; line-height: 1.7; }
+  .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b5afa4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
+  .upload-submit { margin-top: 2.5rem; font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase; background: var(--text); color: var(--warm-white); border: none; padding: 0.9rem 2.5rem; cursor: pointer; transition: background 0.25s; border-radius: 1px; display: none; }
+  .upload-submit:hover { background: var(--accent-dark); }
+  .upload-submit.visible { display: inline-block; }
+
+  /* ── LIGHTBOX ── */
+  .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(30,26,22,0.97); display: flex; align-items: stretch; opacity: 0; pointer-events: none; transition: opacity 0.35s; }
+  .lightbox.open { opacity: 1; pointer-events: all; }
+  .lightbox-image-pane { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5rem 3rem 5rem 5rem; }
+  .lightbox-img { max-width: 100%; max-height: 85vh; object-fit: contain; transform: scale(0.94); transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); }
+  .lightbox.open .lightbox-img { transform: scale(1); }
+  .lightbox-info-pane { width: 340px; flex-shrink: 0; background: rgba(42,37,32,0.55); border-left: 1px solid rgba(255,255,255,0.06); padding: 5rem 2.5rem 3rem; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; transform: translateX(20px); opacity: 0; transition: transform 0.4s 0.1s ease, opacity 0.4s 0.1s ease; }
+  .lightbox.open .lightbox-info-pane { transform: translateX(0); opacity: 1; }
+  .lb-eyebrow { font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
+  .lb-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; line-height: 1.15; color: #fffefb; margin-bottom: 0.4rem; }
+  .lb-year { font-size: 0.78rem; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; margin-bottom: 2rem; }
+  .lb-divider { width: 32px; height: 1px; background: rgba(200,169,110,0.4); margin-bottom: 2rem; }
+  .lb-meta-row { margin-bottom: 1.25rem; }
+  .lb-meta-label { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 0.2rem; display: block; }
+  .lb-meta-value { font-size: 0.84rem; color: rgba(255,255,255,0.75); line-height: 1.5; }
+  .lb-price-block { margin: 1.25rem 0; padding: 1rem 1.25rem; background: rgba(200,169,110,0.1); border: 1px solid rgba(200,169,110,0.2); }
+  .lb-price-label { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(200,169,110,0.6); margin-bottom: 0.3rem; display: block; }
+  .lb-price-value { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 300; color: var(--accent); line-height: 1; }
+  .lb-description { font-size: 0.84rem; color: rgba(255,255,255,0.5); line-height: 1.85; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 1.5rem; }
+  .lb-availability { display: inline-block; margin-top: 1rem; font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; padding: 0.4rem 0.9rem; border-radius: 1px; }
+  .lb-availability.available { background: rgba(200,169,110,0.15); color: var(--accent); border: 1px solid rgba(200,169,110,0.25); }
+  .lb-availability.sold { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.1); }
+  .lb-availability.nfs { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.1); }
+
+  /* Buy / Contact button */
+  .lb-buy-btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+    margin-top: 1.5rem;
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+    color: white; text-decoration: none;
+    font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 0.85rem 1.5rem; border-radius: 1px;
+    transition: opacity 0.2s, transform 0.2s;
+    font-family: 'Jost', sans-serif; font-weight: 400;
+  }
+  .lb-buy-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .lb-buy-btn svg { width: 16px; height: 16px; fill: white; flex-shrink: 0; }
+  .lb-buy-btn.hidden { display: none; }
+
+  .lightbox-close { position: absolute; top: 1.5rem; right: 1.75rem; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 1.8rem; cursor: pointer; line-height: 1; transition: color 0.2s; z-index: 10; }
+  .lightbox-close:hover { color: white; }
+
+  /* ── CONTACT ── */
+  #contact { background: var(--text); color: var(--warm-white); padding: 8rem 4rem; text-align: center; }
+  .contact-label { color: var(--accent); }
+  .contact-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 300; line-height: 1.1; margin-bottom: 1.5rem; }
+  .contact-sub { font-size: 0.88rem; line-height: 1.9; color: rgba(255,255,255,0.55); max-width: 420px; margin: 0 auto 3rem; }
+  .contact-ig-btn {
+    display: inline-flex; align-items: center; gap: 0.75rem;
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+    color: white; text-decoration: none;
+    font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 1rem 2.25rem; border-radius: 2px;
+    transition: opacity 0.2s, transform 0.2s; font-family: 'Jost', sans-serif; font-weight: 400;
+  }
+  .contact-ig-btn:hover { opacity: 0.88; transform: translateY(-2px); }
+  .contact-ig-btn svg { width: 20px; height: 20px; fill: white; }
+  .contact-handle { margin-top: 1.25rem; font-size: 0.78rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; }
+
+  /* ── FOOTER ── */
+  footer { background: var(--text); border-top: 1px solid rgba(255,255,255,0.07); padding: 2rem 4rem; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,0.3); font-size: 0.72rem; letter-spacing: 0.1em; }
+  .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; }
+  .footer-logo span { color: rgba(200,169,110,0.6); }
+
+  /* ── TOAST ── */
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--text); color: var(--warm-white); font-size: 0.78rem; letter-spacing: 0.08em; padding: 0.75rem 1.75rem; border-radius: 2px; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 400; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { padding: 1.25rem 2rem; }
+    .nav-links li:not(:last-child) { display: none; }
+    .about { grid-template-columns: 1fr; padding: 5rem 2rem; gap: 3rem; }
+    .about-img { max-height: 320px; }
+    #gallery, #upload, #contact { padding: 6rem 2rem; }
+    .gallery-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    .gallery-grid { columns: 2; }
+    .artwork-card { grid-template-columns: 1fr; }
+    .artwork-card-img { width: 100%; aspect-ratio: 16/9; }
+    .lightbox { flex-direction: column; }
+    .lightbox-image-pane { padding: 5rem 1.5rem 1.5rem; flex: none; }
+    .lightbox-info-pane { width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding: 2rem 1.5rem 3rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+    .form-row.three { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) {
+    .gallery-grid { columns: 1; }
+    .form-row, .form-row.three { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Aki<span>Artz</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#gallery">Works</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><button class="nav-admin-btn" id="adminBtn" onclick="toggleAdmin()">Admin</button></li>
+  </ul>
+</nav>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLoginModal()">×</button>
+    <p class="modal-eyebrow">Admin Access</p>
+    <h2 class="modal-title">Welcome<br/>Back</h2>
+    <div class="modal-field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off" />
+    </div>
+    <div class="modal-field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <p class="modal-error" id="loginError">Incorrect username or password.</p>
+    <button class="modal-submit" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-text" aria-hidden="true">AkiArtz</div>
+  <p class="hero-eyebrow">Fine Art &amp; Painting</p>
+  <h1 class="hero-title">Where Silence<br/><em>Becomes Form</em></h1>
+  <p class="hero-sub">Original paintings exploring the language of light, texture, and feeling — each work a quiet conversation.</p>
+  <a href="#gallery" class="hero-scroll">
+    <span class="hero-scroll-line"></span>
+    Explore
+  </a>
+</section>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-img">
+    <div class="about-img-placeholder">
+      <img src="./akilan.jpeg" alt="Artist Akilan Sekar" loading="lazy">
+      <svg viewBox="0 0 40 40"><circle cx="20" cy="14" r="6"/><path d="M6 36c0-7.732 6.268-14 14-14s14 6.268 14 14"/></svg>
+      <span>Artist photo</span>
+    </div>
+  </div>
+  <div>
+    <p class="section-label">About the Artist</p>
+    <h2 class="about-title">A Practice Rooted in<br/><em>Observation</em></h2>
+    <p class="about-body">
+      I work with oil and mixed media to trace the moments between seeing and feeling. Each canvas begins as an act of looking — at light falling across a room, at colour shifting through seasons, at the quiet architecture of everyday life.<br/><br/>
+      My work has been exhibited across independent galleries, and I take a limited number of commissions each year for collectors who seek something deeply personal.
+    </p>
+    <a href="https://instagram.com/akilanart" target="_blank" rel="noopener" class="about-link">Follow on Instagram</a>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="gallery-header">
+    <div>
+      <p class="section-label">Selected Works</p>
+      <h2 class="gallery-title">The Collection</h2>
+    </div>
+    <div class="gallery-filter">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="recent">Recent</button>
+      <button class="filter-btn" data-filter="series">Series</button>
+    </div>
+  </div>
+
+  <div class="gallery-grid" id="galleryGrid">
+    <div class="gallery-item" data-cat="recent"
+      data-title="Untitled I" data-year="2024" data-medium="Oil on canvas"
+      data-dimensions="60 × 80 cm" data-availability="available" data-price="QAR 2,800"
+      data-description="An exploration of morning light through a half-open window — stillness suspended between night and day.">
+      <div class="gallery-placeholder" style="height:380px"><span>Upload your painting</span></div>
+      <div class="gallery-overlay">
+        <div class="gallery-caption">
+          <span class="gallery-caption-title">Untitled I</span>
+          <span class="gallery-caption-meta">Oil on canvas · 2024</span>
+          <span class="gallery-caption-price">QAR 2,800</span>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-item" data-cat="series"
+      data-title="Study in Ochre" data-year="2024" data-medium="Mixed media"
+      data-dimensions="40 × 50 cm" data-availability="sold" data-price="QAR 1,500"
+      data-description="Part of the Earth Series — a study of warm pigments and layered texture inspired by sun-baked clay.">
+      <div class="gallery-placeholder" style="height:260px"><span>Upload your painting</span></div>
+      <div class="gallery-overlay">
+        <div class="gallery-caption">
+          <span class="gallery-caption-title">Study in Ochre</span>
+          <span class="gallery-caption-meta">Mixed media · 2024</span>
+          <span class="gallery-caption-price">Sold</span>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-item" data-cat="recent"
+      data-title="Evening, Quiet" data-year="2023" data-medium="Oil on linen"
+      data-dimensions="90 × 120 cm" data-availability="available" data-price="QAR 4,200"
+      data-description="The room after everyone has left. The particular quality of late-afternoon light in an empty space.">
+      <div class="gallery-placeholder" style="height:320px"><span>Upload your painting</span></div>
+      <div class="gallery-overlay">
+        <div class="gallery-caption">
+          <span class="gallery-caption-title">Evening, Quiet</span>
+          <span class="gallery-caption-meta">Oil on linen · 2023</span>
+          <span class="gallery-caption-price">QAR 4,200</span>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-item" data-cat="series"
+      data-title="After Rain" data-year="2023" data-medium="Acrylic"
+      data-dimensions="50 × 70 cm" data-availability="nfs" data-price=""
+      data-description="The world washed clean — a moment of clarity after a heavy downpour, painted from memory.">
+      <div class="gallery-placeholder" style="height:300px"><span>Upload your painting</span></div>
+      <div class="gallery-overlay">
+        <div class="gallery-caption">
+          <span class="gallery-caption-title">After Rain</span>
+          <span class="gallery-caption-meta">Acrylic · 2023</span>
+          <span class="gallery-caption-price">Not for Sale</span>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-item" data-cat="recent"
+      data-title="Interior Light" data-year="2024" data-medium="Oil on canvas"
+      data-dimensions="45 × 45 cm" data-availability="available" data-price="QAR 1,900"
+      data-description="A small study on how light transforms the familiar into something luminous and strange.">
+      <div class="gallery-placeholder" style="height:220px"><span>Upload your painting</span></div>
+      <div class="gallery-overlay">
+        <div class="gallery-caption">
+          <span class="gallery-caption-title">Interior Light</span>
+          <span class="gallery-caption-meta">Oil on canvas · 2024</span>
+          <span class="gallery-caption-price">QAR 1,900</span>
+        </div>
+      </div>
+    </div>
+    <div class="gallery-item" data-cat="series"
+      data-title="Pale Horizon" data-year="2022" data-medium="Mixed media"
+      data-dimensions="100 × 60 cm" data-availability="sold" data-price="QAR 3,500"
+      data-description="A horizon line almost lost — sky and land dissolving into each other at dawn.">
+      <div class="gallery-placeholder" style="height:340px"><span>Upload your painting</span></div>
+      <div class="gallery-overlay">
+        <div class="gallery-caption">
+          <span class="gallery-caption-title">Pale Horizon</span>
+          <span class="gallery-caption-meta">Mixed media · 2022</span>
+          <span class="gallery-caption-price">Sold</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- UPLOAD (admin only) -->
+<section id="upload">
+  <div class="upload-inner">
+    <p class="section-label">Admin · Add New Work</p>
+    <h2 class="upload-title">Share Your Latest<br/><em style="font-family:'Cormorant Garamond',serif;font-style:italic;">Creation</em></h2>
+    <p class="upload-desc">Upload an image of your painting, fill in the artwork details, and it will appear in the gallery with full information and pricing.</p>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" accept="image/*" multiple id="fileInput" />
+      <svg class="upload-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path d="M24 32V16M24 16l-6 6M24 16l6 6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 36a8 8 0 01-2-5.657C6 25.49 10.03 22 15 22a9 9 0 0118 0c4.97 0 9 3.49 9 8.343A8 8 0 0140 36" stroke-linecap="round"/>
+      </svg>
+      <p class="upload-cta">Drop images here or click to browse</p>
+      <p class="upload-hint">JPG, PNG, WEBP · Max 20 MB per file</p>
+    </div>
+
+    <div class="artwork-queue" id="artworkQueue"></div>
+    <button class="upload-submit" id="uploadSubmit" onclick="publishToGallery()">Publish to Gallery</button>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <p class="section-label contact-label">Get in Touch</p>
+  <h2 class="contact-title">Let's Begin<br/><em style="font-style:italic">a Conversation</em></h2>
+  <p class="contact-sub">Interested in a piece, a commission, or just want to say hello? Reach out on Instagram — I'd love to hear from you.</p>
+  <a href="https://instagram.com/akilanart" target="_blank" rel="noopener" class="contact-ig-btn">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+    Message on Instagram
+  </a>
+  <p class="contact-handle">@akilanart</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">Aki<span>Artz</span></span>
+  <span>© 2024 · All rights reserved</span>
+  <span>Fine Art &amp; Painting</span>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <div class="lightbox-image-pane" id="lbImagePane">
+    <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+  </div>
+  <div class="lightbox-info-pane" id="lightboxInfoPane">
+    <p class="lb-eyebrow">Original Work</p>
+    <h2 class="lb-title" id="lbTitle"></h2>
+    <p class="lb-year" id="lbYear"></p>
+    <div class="lb-divider"></div>
+    <div class="lb-meta-row" id="lbMediumRow">
+      <span class="lb-meta-label">Medium</span>
+      <span class="lb-meta-value" id="lbMedium"></span>
+    </div>
+    <div class="lb-meta-row" id="lbDimsRow">
+      <span class="lb-meta-label">Dimensions</span>
+      <span class="lb-meta-value" id="lbDimensions"></span>
+    </div>
+    <div class="lb-meta-row" id="lbSeriesRow" style="display:none">
+      <span class="lb-meta-label">Series</span>
+      <span class="lb-meta-value" id="lbSeries"></span>
+    </div>
+    <div class="lb-price-block" id="lbPriceBlock">
+      <span class="lb-price-label">Price</span>
+      <span class="lb-price-value" id="lbPrice"></span>
+    </div>
+    <span class="lb-availability" id="lbAvailability"></span>
+    <p class="lb-description" id="lbDescription"></p>
+    <a class="lb-buy-btn" id="lbBuyBtn" href="https://instagram.com/akilanart" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      Contact to Purchase
+    </a>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── ADMIN CREDENTIALS (change these!) ──
+  const ADMIN_USER = 'akiartz';
+  const ADMIN_PASS = 'AkiArtz2024';
+
+  let isAdmin = false;
+
+  function toggleAdmin() {
+    if (isAdmin) { logoutAdmin(); } else { openLoginModal(); }
+  }
+
+  function openLoginModal() {
+    document.getElementById('loginModal').classList.add('open');
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').classList.remove('visible');
+    setTimeout(() => document.getElementById('loginUser').focus(), 300);
+  }
+
+  function closeLoginModal() {
+    document.getElementById('loginModal').classList.remove('open');
+  }
+
+  document.getElementById('loginModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLoginModal();
+  });
+
+  function doLogin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      isAdmin = true;
+      closeLoginModal();
+      document.getElementById('upload').classList.add('admin-visible');
+      const btn = document.getElementById('adminBtn');
+      btn.textContent = 'Logout';
+      btn.classList.add('logged-in');
+      showToast('Admin access granted ✓');
+      setTimeout(() => document.getElementById('upload').scrollIntoView({behavior:'smooth'}), 500);
+    } else {
+      document.getElementById('loginError').classList.add('visible');
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+    }
+  }
+
+  function logoutAdmin() {
+    isAdmin = false;
+    document.getElementById('upload').classList.remove('admin-visible');
+    const btn = document.getElementById('adminBtn');
+    btn.textContent = 'Admin';
+    btn.classList.remove('logged-in');
+    showToast('Logged out');
+  }
+
+  // ── FILTER BUTTONS ──
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      document.querySelectorAll('.gallery-item').forEach(item => {
+        item.style.display = (f === 'all' || item.dataset.cat === f) ? '' : 'none';
+      });
+    });
+  });
+
+  // ── GALLERY CLICK → LIGHTBOX ──
+  document.getElementById('galleryGrid').addEventListener('click', e => {
+    const item = e.target.closest('.gallery-item');
+    if (item) openLightbox(item);
+  });
+
+  function openLightbox(item) {
+    const img = item.querySelector('img');
+    const d   = item.dataset;
+
+    document.getElementById('lightboxImg').src = img ? img.src : '';
+    document.getElementById('lightboxImg').alt = d.title || '';
+    document.getElementById('lbTitle').textContent = d.title || 'Untitled';
+    document.getElementById('lbYear').textContent  = d.year  || '';
+    document.getElementById('lbMedium').textContent      = d.medium     || '—';
+    document.getElementById('lbDimensions').textContent  = d.dimensions || '—';
+
+    const seriesRow = document.getElementById('lbSeriesRow');
+    if (d.series) { document.getElementById('lbSeries').textContent = d.series; seriesRow.style.display = ''; }
+    else { seriesRow.style.display = 'none'; }
+
+    // Price
+    const priceBlock = document.getElementById('lbPriceBlock');
+    const priceVal   = document.getElementById('lbPrice');
+    if (d.price && d.availability !== 'sold' && d.availability !== 'nfs') {
+      priceVal.textContent = d.price;
+      priceBlock.style.display = '';
+    } else {
+      priceBlock.style.display = 'none';
+    }
+
+    // Availability badge
+    const avEl  = document.getElementById('lbAvailability');
+    const avMap = { available: 'Available', sold: 'Sold', nfs: 'Not for Sale' };
+    avEl.textContent = avMap[d.availability] || '';
+    avEl.className   = 'lb-availability ' + (d.availability || '');
+
+    // Description
+    const descEl = document.getElementById('lbDescription');
+    descEl.textContent  = d.description || '';
+    descEl.style.display = d.description ? '' : 'none';
+
+    // Buy button — only for available works
+    const buyBtn = document.getElementById('lbBuyBtn');
+    if (d.availability === 'available') {
+      const msg = encodeURIComponent('Hi! I\'m interested in purchasing "' + (d.title||'your artwork') + '" ('+( d.price||'')+')');
+      buyBtn.href = 'https://instagram.com/akilanart';
+      buyBtn.classList.remove('hidden');
+    } else {
+      buyBtn.classList.add('hidden');
+    }
+
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('lbImagePane').addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  // ── UPLOAD (admin only) ──
+  const zone      = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const queue     = document.getElementById('artworkQueue');
+  const submitBtn = document.getElementById('uploadSubmit');
+  let pendingWorks = [];
+
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFiles([...e.dataTransfer.files]); });
+  fileInput.addEventListener('change', () => { handleFiles([...fileInput.files]); fileInput.value = ''; });
+
+  function handleFiles(files) {
+    files.filter(f => f.type.startsWith('image/')).forEach(file => {
+      if (file.size > 20 * 1024 * 1024) { showToast('File too large: ' + file.name); return; }
+      const reader = new FileReader();
+      reader.onload = e => addArtworkCard(e.target.result, file.name);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function addArtworkCard(src, filename) {
+    const idx  = pendingWorks.length;
+    const card = document.createElement('div');
+    card.className = 'artwork-card';
+    card.innerHTML = `
+      <img class="artwork-card-img" src="${src}" alt="${filename}" />
+      <div class="artwork-card-form">
+        <div class="artwork-card-header">
+          <span class="artwork-card-filename">${filename}</span>
+          <button class="artwork-card-remove" onclick="removeCard(this,${idx})">×</button>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Title *</label><input type="text" name="title" placeholder="e.g. Morning Study" /></div>
+          <div class="field"><label>Year</label><input type="text" name="year" placeholder="${new Date().getFullYear()}" maxlength="4" /></div>
+        </div>
+        <div class="form-row three">
+          <div class="field"><label>Medium</label><input type="text" name="medium" placeholder="e.g. Oil on canvas" /></div>
+          <div class="field"><label>Dimensions</label><input type="text" name="dimensions" placeholder="e.g. 60 × 80 cm" /></div>
+          <div class="field"><label>Price</label><input type="text" name="price" placeholder="e.g. QAR 2,500" /></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Series / Category</label><input type="text" name="series" placeholder="e.g. Light Studies" /></div>
+          <div class="field"><label>Availability</label>
+            <select name="availability">
+              <option value="available">Available</option>
+              <option value="nfs">Not for Sale</option>
+              <option value="sold">Sold</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field"><label>Description / Artist Statement</label>
+            <textarea name="description" placeholder="Share the story, inspiration, or meaning behind this work…"></textarea>
+          </div>
+        </div>
+      </div>`;
+    queue.appendChild(card);
+    pendingWorks.push({ src, filename, cardEl: card, removed: false });
+    submitBtn.classList.add('visible');
+  }
+
+  function removeCard(btn, idx) {
+    pendingWorks[idx].removed = true;
+    btn.closest('.artwork-card').remove();
+    if (pendingWorks.every(w => w.removed)) submitBtn.classList.remove('visible');
+  }
+
+  function publishToGallery() {
+    const grid = document.getElementById('galleryGrid');
+    let count = 0;
+    pendingWorks.forEach((work, i) => {
+      if (work.removed) return;
+      const form  = work.cardEl.querySelector('.artwork-card-form');
+      const get   = n => (form.querySelector('[name="'+n+'"]').value || '').trim();
+      const title = get('title') || work.filename.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ');
+      const year  = get('year')  || String(new Date().getFullYear());
+      const avail = get('availability') || 'available';
+      const price = get('price');
+      const meta  = [get('medium'), year].filter(Boolean).join(' · ');
+      const priceDisplay = avail === 'sold' ? 'Sold' : avail === 'nfs' ? 'Not for Sale' : price || '';
+      const cat   = get('series') ? 'series' : 'recent';
+
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      Object.assign(item.dataset, {
+        cat, title, year, medium: get('medium'), dimensions: get('dimensions'),
+        series: get('series'), availability: avail, price, description: get('description')
+      });
+      item.style.animationDelay = (i * 0.08) + 's';
+      item.innerHTML = `
+        <img src="${work.src}" alt="${title}" style="width:100%;display:block;" />
+        <div class="gallery-overlay">
+          <div class="gallery-caption">
+            <span class="gallery-caption-title">${title}</span>
+            <span class="gallery-caption-meta">${meta}</span>
+            ${priceDisplay ? '<span class="gallery-caption-price">'+priceDisplay+'</span>' : ''}
+          </div>
+        </div>`;
+      grid.prepend(item);
+      count++;
+    });
+
+    if (!count) { showToast('Nothing to publish.'); return; }
+    queue.innerHTML = '';
+    pendingWorks = [];
+    submitBtn.classList.remove('visible');
+    showToast(count === 1 ? '1 work published ✓' : count + ' works published ✓');
+    setTimeout(() => document.getElementById('gallery').scrollIntoView({behavior:'smooth'}), 400);
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
